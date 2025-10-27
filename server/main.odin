@@ -53,31 +53,66 @@ handleClient :: proc(socket: net.TCP_Socket) {
 		}
 		path := get_file_path(uri)
 		full_path := strings.concatenate([]string{"site/", path})
+		is_dir := os.is_dir_path(full_path)
 		if (strings.contains(full_path, "..")) {
 			write_error(socket, .bad_request, "very funny m8")
 			break
 		}
-		file, open_err := os.open(full_path)
-		if open_err != nil {
-			write_error(socket, .not_fount, "not found")
+		if !is_dir {
+			serve_file(socket, full_path)
 			break
 		}
-		defer os.close(file)
-		buf := make([]u8, mem.Megabyte * 10)
-		defer delete(buf)
-		fn, read_err := os.read_full(file, buf[:])
-		if read_err != nil {
-			write_error(socket, .internal_error, "failed to read file")
+		if is_dir {
+			serve_directory(socket, path, full_path)
 			break
 		}
-		mimetype := get_mimetype(full_path)
-		defer delete(mimetype)
-		rsp := strings.concatenate([]string{"20 ", mimetype, "\r\n", transmute(string)buf[:fn]})
-		defer delete(rsp)
-		net.send_tcp(socket, transmute([]u8)rsp)
+		write_error(socket, .not_fount, "not found")
 		net.close(socket)
 		break
 	}
+}
+
+serve_directory :: proc(socket: net.TCP_Socket, gemini_path: string, full_path: string) {
+	dir, open_err := os.open(full_path)
+	if open_err != nil {
+		write_error(socket, .not_fount, "not found")
+		return
+	}
+	defer os.close(dir)
+	contents, read_err := os.read_dir(dir, -1)
+	if open_err != nil {
+		write_error(socket, .internal_error, "failed to read dir")
+		return
+	}
+	rsp := strings.concatenate([]string{"20 ", "text/gemini", "\r\n", "# ", gemini_path, "\n"})
+	net.send_tcp(socket, transmute([]u8)rsp)
+	delete(rsp)
+	for elem in contents {
+		rsp = strings.concatenate([]string{"=> ", gemini_path, "/", elem.name, "\n"})
+		net.send_tcp(socket, transmute([]u8)rsp)
+		delete(rsp)
+	}
+}
+
+serve_file :: proc(socket: net.TCP_Socket, full_path: string) {
+	file, open_err := os.open(full_path)
+	if open_err != nil {
+		write_error(socket, .not_fount, "not found")
+		return
+	}
+	defer os.close(file)
+	buf := make([]u8, mem.Megabyte * 10)
+	defer delete(buf)
+	fn, read_err := os.read_full(file, buf[:])
+	if read_err != nil {
+		write_error(socket, .internal_error, "failed to read file")
+		return
+	}
+	mimetype := get_mimetype(full_path)
+	defer delete(mimetype)
+	rsp := strings.concatenate([]string{"20 ", mimetype, "\r\n", transmute(string)buf[:fn]})
+	defer delete(rsp)
+	net.send_tcp(socket, transmute([]u8)rsp)
 }
 
 get_mimetype :: proc(path: string) -> string {
