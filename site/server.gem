@@ -1,0 +1,24 @@
+# Boaz gemini server
+
+```
+ (   )     (   )
+  |||       |||
+  |||       |||
+  |B|       |J|
+  |||       |||
+ (___)     (___)
+```
+
+The Boaz gemini server is an odin based, light on resources file server for the gemini network.
+
+## Architecture
+
+The server works by reading and writing plain text off its socket, this means in order to interface with gemini clients propperly one must use an SSL tunnel proxy. This is an intentional choise to keep the code as simple as possible. Any tunnel that exposes a port and writes to another port should work fine, this specific server uses `stunnel` (see the repo for more info)
+
+## Limitations
+
+Currently the server runs on a single thread, this is both because gemini requests are fairly light and to further keep the code as simple as possible.
+
+## License
+
+The server is licensed under the BSD-2 license.
