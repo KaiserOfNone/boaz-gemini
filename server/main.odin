@@ -7,6 +7,8 @@ import "core:os"
 import "core:os/os2"
 import "core:strings"
 
+import "../protocol"
+
 main :: proc() {
 	context.logger = log.create_console_logger()
 	log.infof("Starting server")
@@ -42,8 +44,7 @@ handleClient :: proc(socket: net.TCP_Socket) {
 		}
 		// check for \r \n
 		if (data_in_bytes[n - 1] != '\n') {
-			rsp := `59 bad request\r\n`
-			net.send_tcp(socket, transmute([]u8)rsp)
+			write_error(socket, .bad_request, "bad request")
 			break
 		}
 		uri, e := strings.clone_from_bytes(data_in_bytes[:], context.allocator)
@@ -53,14 +54,12 @@ handleClient :: proc(socket: net.TCP_Socket) {
 		path := get_file_path(uri)
 		full_path := strings.concatenate([]string{"site/", path})
 		if (strings.contains(full_path, "..")) {
-			rsp := `59 very funny m8\r\n`
-			net.send_tcp(socket, transmute([]u8)rsp)
+			write_error(socket, .bad_request, "very funny m8")
 			break
 		}
 		file, open_err := os.open(full_path)
 		if open_err != nil {
-			rsp := `51 not found\r\n`
-			net.send_tcp(socket, transmute([]u8)rsp)
+			write_error(socket, .not_fount, "not found")
 			break
 		}
 		defer os.close(file)
@@ -68,8 +67,7 @@ handleClient :: proc(socket: net.TCP_Socket) {
 		defer delete(buf)
 		fn, read_err := os.read_full(file, buf[:])
 		if read_err != nil {
-			rsp := `59 failed to read file\r\n`
-			net.send_tcp(socket, transmute([]u8)rsp)
+			write_error(socket, .internal_error, "failed to read file")
 			break
 		}
 		mimetype := get_mimetype(full_path)
@@ -124,4 +122,12 @@ get_file_path :: proc(_uri: string) -> string {
 		return "index.gem"
 	}
 	return res[1]
+}
+
+write_error :: proc(socket: net.TCP_Socket, code: protocol.Status, excuse: string) {
+	codes := protocol.status_strs
+	net.send_tcp(socket, transmute([]u8)codes[code])
+	net.send_tcp(socket, []u8{' '})
+	net.send_tcp(socket, transmute([]u8)excuse)
+	net.send_tcp(socket, []u8{'\r', '\n'})
 }
