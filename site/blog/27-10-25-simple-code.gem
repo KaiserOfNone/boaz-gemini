@@ -1,0 +1,52 @@
+# On the benefits of simple code
+
+The title may seem cliché, but I do actually mean this. Many authors, much way better than mine, have written on this topic, mainly coming from old school C, UNIX and Plan 9 tradition. There's no but, I do want to say a couple things though.
+
+Simple code can be taken as quite the naïve thing, software grows complex with development and especially as requirements grow and swell with time, so does the size of code bases and their complexity. This is given. Right? This surely has to be the case, one should simply look at the code bases of big corporations or of important open source projects like Linux or ffmpeg. Well partially. Some codebases do tend to grow in complexity and abstraction as requirements grow. But not all of them.
+
+As I mentioned in the introduction there's the case of old UNIX and Plan 9, to this day projects like BSDs have some of the cleanest and most understandable codebases out there. And I do mean it, if one wishes to understand how, for example, the `ls` command works, one CAN look at the GNU coreutils implementation, but you'll be quickly taken aback by the gigantic (albeit well-documented) 5 thousand long project. `ls` must surely be incredibly complex then, right? Well it really only needs to list the contents of a directory, which itself is mostly handled by the OS, then where does all this complexity come from? If we compare, GNU's `ls` and OpenBSD's they have similar functionality, however OpenBSD's happens to only be 628 lines of C with a couple files that together amount to roughly 1k. Or we can take it even further and look at 9Front (a fork of Plan 9) which only needs 325 lines of C and nothing else to implement all of `ls`.
+
+=> https://github.com/coreutils/coreutils/blob/master/src/ls.c GNU coreutils `ls`
+=> https://github.com/openbsd/src/blob/master/bin/ls/ls.c OpenBSD `ls`
+=> https://github.com/9front/9front/blob/front/sys/src/cmd/ls.c 9Front `ls`
+
+``` Cirno (9 Front's mascot) Holding her head in confusion
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣴⠶⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣾⡿⠃⠀⠀⠀⠀⠀⢀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣘⣿⡧⠤⠤⠤⠖⠛⠋⠉⠙⢦⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⡴⠚⠋⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢯⠙⠦⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣤⡤⢤⣴⣞⣹⡿⠶⣶⠀⠀⠀⢰⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠀⠈⠛⢦⣀⣀⣴⠟⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢼⠁⢹⠁⣽⠏⠀⣠⣤⡴⠃⠀⠀⠀⣼⡀⠀⠀⠀⣠⠀⣤⣄⠀⠀⢸⠀⠀⠀⠀⠀⠓⢾⡁⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣠⡴⣶⡶⣿⣇⠟⠀⠉⠀⢰⠏⠀⣤⣀⠀⠀⣸⠻⣷⠀⠀⣰⣿⣴⡯⠊⠀⢀⣿⣰⡄⠀⠶⢼⡄⠀⠙⡄⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡴⠛⣉⣠⣾⣿⡇⠞⠃⠀⠀⠀⠀⢾⡆⢰⣿⠁⢀⡼⠣⢤⣿⣤⠞⠁⢹⣯⣧⠀⠀⡼⠉⢿⣧⠀⠀⠀⢻⡄⠀⢹⡄⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⢀⣾⣋⣴⣶⣿⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠘⣷⣾⣧⡴⠋⢀⡴⠚⠛⠛⢶⡦⣼⣿⣿⣀⡾⠁⠀⠘⣿⣆⠀⠀⠘⡇⠀⠀⢧⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⢹⣿⡃⠀⠀⠘⣆⠚⢉⡷⠀⢱⡄⠙⣿⡿⠁⢤⣤⣰⣿⣿⠃⠀⠀⣿⠀⠀⢸⡄⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⠻⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⣾⣿⡇⠀⠀⠀⠉⠙⢉⣥⠴⠚⠀⠀⠘⢧⠀⢸⢧⣼⣿⣿⡇⠀⠀⣾⠀⠀⢸⣽⣆⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⡟⠀⠀⠀⠀⠀⠀⢀⣼⠏⣿⢧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢻⣿⠿⢏⣿⡇⠀⣰⣯⣴⠀⢸⠀⠙⠧⠀⠀⠀⠀
+⠀⠀⠀⠐⢤⡀⠀⠀⠀⠀⠀⠀⠘⢛⠟⠀⠀⠀⠀⠀⢀⣰⣿⠅⠀⠙⣿⠳⠤⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣺⠏⣇⣰⡟⣿⣿⣴⡟⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠉⠢⡀⠀⠀⠀⠀⡰⠋⠀⠀⠀⠀⠀⢀⣾⡿⠁⠀⠀⠀⠸⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣿⢀⣿⢏⣼⢯⣿⡟⠁⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠈⠳⣄⢀⡞⠁⠀⠀⠀⠀⠀⢀⣾⣿⣷⣠⠀⠀⠀⢸⡿⠀⠀⣖⠓⠒⠲⠤⠤⢄⣀⣀⠀⠀⠀⠀⢸⣿⠈⣿⡿⢡⣞⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⣨⠏⠀⠀⠀⠀⠀⠀⢀⡞⣉⣈⢻⣿⣷⣤⣄⣼⡇⠀⠀⠙⠋⠉⠉⠉⠓⠒⠲⢭⣽⣲⣆⠀⣼⣿⠀⢿⡇⠀⠈⠓⢤⡀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⣰⠃⠀⠀⠀⠀⠀⠀⢀⡾⠋⠉⠉⠉⠛⢿⣿⣿⣿⡟⢶⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢈⣩⡾⠟⠉⠀⢸⣷⡀⠀⠀⠀⠙⢦⡀⠀⠀⠀⠀⠀
+⣆⡀⠀⠀⠀⠀⠀⣰⠃⠀⠀⠀⠀⠀⠀⢀⣾⠀⣀⡀⠀⠀⠀⠈⠻⣿⣿⡛⠲⢭⣗⠦⣤⣀⠀⣀⣠⣤⣴⣺⣿⣏⡀⡀⠀⢀⣴⣿⣷⡄⠀⡀⠀⠀⠙⢦⡀⠀⠀⠀
+⠀⠙⠳⢄⡀⠀⢠⠇⠀⠀⠀⠀⠀⠀⠀⡼⠉⠉⠲⢯⠑⠆⠀⠀⠀⠙⣿⣷⡀⠀⠈⠉⠻⢿⣿⣝⡻⣿⣿⣷⣄⠙⠿⢷⡶⠟⠙⣇⡙⢮⣀⠘⠲⢄⡀⠀⠙⣆⠀⠀
+⠀⠀⠀⠀⠙⠢⡾⠀⠀⠀⠀⠀⠀⠀⡼⠃⠀⠀⠀⠈⢳⠀⠀⠀⠀⠀⢹⣿⣇⢀⣠⠤⠚⣿⣿⣿⣿⣶⣭⣿⣿⣧⡀⠀⠀⠀⠀⠸⣽⡀⠈⠉⠛⠓⠒⠂⠀⠘⣧⠀
+⠀⠀⠀⠀⠀⠀⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠇⠀⠀⠀⠀⢸⣿⣿⣿⡅⠀⣼⡏⢻⣏⠻⣷⣍⡙⠛⣿⣿⡆⠀⠀⠀⠀⢻⡇⠀⠀⠀⠀⠀⠀⠀⠈⢸⡆
+⠀⠀⠀⠀⡀⠒⠷⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⣴⣯⣸⠀⠀⠀⢀⣸⣿⣿⣿⢻⡴⣿⣅⣸⣿⡄⠈⠛⠿⣾⡿⣿⡿⣆⢀⠀⠀⠘⣿⠀⠀⠀⠀⠀⢀⣀⡴⠚⠁
+⠀⠀⠀⠀⠙⠢⣄⡈⠉⠙⢷⡒⠒⠛⠻⣯⣭⣭⡿⢻⠟⠁⠀⠀⠠⣾⣿⣿⣿⣿⣄⡻⣬⣿⣿⣿⣦⣤⣤⣤⣤⣤⣘⣷⡘⣿⠀⠀⣴⡗⠒⠒⠒⠉⠉⠉⠁⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠙⢷⡀⠀⠙⠶⢤⣀⡀⠙⠦⣄⡀⠀⠀⣀⣀⣴⣿⣿⣿⣿⣿⣿⣷⣦⣦⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣿⣷⠾⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢦⣀⠀⠀⠀⠈⠙⠲⠤⣍⣉⠉⠀⠘⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⡂⠰⣄⠀⠀⠀⠲⢤⣀⡀⠉⠉⠒⢢⣨⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣧⢹⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠓⠬⠵⠤⠄⣀⣀⣘⣚⣶⠤⠒⠉⠀⠸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⠈⢻⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠁⠀⠀⠀⠀⠀⠘⣷⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀⠈⣧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢹⡏⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀⠀⠘⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⠀⠀⠀⠤⠤⠤⠤⠤⠤⠤⠤⢀⣀⡠⢿⣮⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀⠀⠀⠘⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⢀⠤⠖⠂⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⡴⠞⠉⠀⠘⣿⢃⣿⣿⣿⣿⣿⣿⣿⠟⢿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠹⡀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⢀⣀⠄⠀⠀⢀⣀⣀⣀⣀⠠⠀⢀⣀⣀⣠⢴⠿⠟⠋⠀⠀⠀⠀⠀⠀⢹⡇⢹⣿⣿⣿⣿⣿⣿⣤⣾⣿⣿⣿⣿⣿⣿⣿⡀⠀⠀⠀⣧⠀⠀⠀⠀
+```
+
+This exercise of looking at code size might sound facetious, but I do want to go somewhere with this, if one is learning how to code, be it for the first time as a complete beginner, or learning how a new programming language works, having code examples is one of the MOST useful tools one has at their disposal, this is even more important than documentation in my opinion (which is not permission to neglect writing documentation of course). This is because examples provide something that plain docs don't: a clear guide that is currently functional.
+
+This is why I personally follow this idea that I call "Radical readability" and I encourage you to follow in this, not taking the sweet temptation of highly complex frameworks that claim to make your life simpler, but actually taking the simplicity of your craft into your own hands. For what is the Second Freedom of free software (the freedom to study source code and make modifications to the software) if the code itself has become so arcane and obscure in its construction that introducing oneself to the project requires forsaking a job's worth of time just to being able to comprehend what is actually taking place on one's CPU.
+
+Now don't take me wrong, I am not advocating for software to be easy, for simple and easy are two different concepts. What a piece of software does can be incredibly hard, but it still should strive to remaining simple. Abstraction is a basilisk that can wrap around your ideas and kill you with its sight, and thus should be a weapon that seldom should be reached for. Again keep in mind here I refer to opaque abstraction, where one hides away complexity from the user but only ends up hiding a pile of junk under the rug, hoping in vain nobody will have to look under the hood. Instead reject that notion and when abstracting is necessary, encourage people to look under the hood, keeping the engine clean both ensures it works without surprises, as nasty bugs can hide within the grime, and encourages others to create thigns in a similar fashion.
