@@ -4,6 +4,7 @@ import "core:log"
 import "core:mem"
 import "core:net"
 import "core:os"
+import "core:os/os2"
 import "core:strings"
 
 main :: proc() {
@@ -51,25 +52,62 @@ handleClient :: proc(socket: net.TCP_Socket) {
 		}
 		path := get_file_path(uri)
 		full_path := strings.concatenate([]string{"site/", path})
+		if (strings.contains(full_path, "..")) {
+			rsp := `59 very funny m8`
+			net.send_tcp(socket, transmute([]u8)rsp)
+			break
+		}
 		file, open_err := os.open(full_path)
 		if open_err != nil {
-			rsp := `59 not found`
+			rsp := `51 not found`
 			net.send_tcp(socket, transmute([]u8)rsp)
 			break
 		}
 		defer os.close(file)
 		buf := make([]u8, mem.Megabyte * 10)
+		defer delete(buf)
 		fn, read_err := os.read_full(file, buf[:])
 		if read_err != nil {
 			rsp := `59 failed to read file`
 			net.send_tcp(socket, transmute([]u8)rsp)
 			break
 		}
-		rsp := strings.concatenate([]string{"20 text/gemini\r\n", transmute(string)buf[:fn]})
+		mimetype := get_mimetype(full_path)
+		defer delete(mimetype)
+		rsp := strings.concatenate([]string{"20", mimetype, "\r\n", transmute(string)buf[:fn]})
+		defer delete(rsp)
 		net.send_tcp(socket, transmute([]u8)rsp)
 		net.close(socket)
 		break
 	}
+}
+
+get_mimetype :: proc(path: string) -> string {
+	command := []string{"file", "-I", path}
+	desc := os2.Process_Desc {
+		command = command,
+	}
+	_, stdout, stderr, err := os2.process_exec(desc, context.allocator)
+	defer delete(stdout)
+	defer delete(stderr)
+	if err != nil {
+		return "idk"
+	}
+	res, split_err := strings.split_n(transmute(string)stdout, ": ", 2)
+	if split_err != nil {
+		return "fuck"
+	}
+	defer delete(res)
+	n := 0
+	for c in res[1] {
+		if c == ';' {
+			break
+		}
+		n += 1
+	}
+	mimetype := strings.clone_from(res[1][:n])
+	log.info(mimetype)
+	return mimetype
 }
 
 get_file_path :: proc(_uri: string) -> string {
