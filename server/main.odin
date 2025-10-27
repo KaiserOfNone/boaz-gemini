@@ -1,5 +1,6 @@
 package server
 
+import "core:flags"
 import "core:log"
 import "core:mem"
 import "core:net"
@@ -9,11 +10,33 @@ import "core:strings"
 
 import "../protocol"
 
-main :: proc() {
-	context.logger = log.create_console_logger()
-	log.infof("Starting server")
+Options :: struct {
+	port:      int `usage:"Port to listen on. (default ./site)"`,
+	serve_dir: string `usage:"The directory to serve. (default 1964)"`,
+}
 
-	socket, err := net.listen_tcp(net.Endpoint{port = 1964, address = net.IP4_Any})
+opts := Options{}
+
+init_opts :: proc() {
+	style: flags.Parsing_Style = .Unix
+	flags.parse_or_exit(&opts, os.args, style)
+	if opts.serve_dir == "" {
+		opts.serve_dir = "./site/"
+	}
+	if opts.serve_dir[len(opts.serve_dir) - 1] != '/' {
+		opts.serve_dir = strings.concatenate([]string{opts.serve_dir, "/"})
+	}
+	if opts.port == 0 {
+		opts.port = 1964
+	}
+}
+
+main :: proc() {
+	init_opts()
+	context.logger = log.create_console_logger()
+	log.infof("Starting server port %d", opts.port)
+	log.infof("Serving contents of %s", opts.serve_dir)
+	socket, err := net.listen_tcp(net.Endpoint{port = opts.port, address = net.IP4_Any})
 	if err != nil {
 		log.errorf("Failed to start socket: %s", err)
 		os.exit(-1)
@@ -51,10 +74,11 @@ handleClient :: proc(socket: net.TCP_Socket) {
 		if (uri[n - 2:n] == "\r\n") {
 			uri = uri[:n - 2]
 		}
+		log.infof("Request for %s", uri)
 		path := get_file_path(uri)
-		full_path := strings.concatenate([]string{"site/", path})
+		full_path := strings.concatenate([]string{opts.serve_dir, path})
 		is_dir := os.is_dir_path(full_path)
-		if (strings.contains(full_path, "..")) {
+		if (strings.contains(path, "..")) {
 			write_error(socket, .bad_request, "very funny m8")
 			break
 		}
