@@ -42,7 +42,7 @@ handleClient :: proc(socket: net.TCP_Socket) {
 		}
 		// check for \r \n
 		if (data_in_bytes[n - 1] != '\n') {
-			rsp := `59 bad request`
+			rsp := `59 bad request\r\n`
 			net.send_tcp(socket, transmute([]u8)rsp)
 			break
 		}
@@ -53,13 +53,13 @@ handleClient :: proc(socket: net.TCP_Socket) {
 		path := get_file_path(uri)
 		full_path := strings.concatenate([]string{"site/", path})
 		if (strings.contains(full_path, "..")) {
-			rsp := `59 very funny m8`
+			rsp := `59 very funny m8\r\n`
 			net.send_tcp(socket, transmute([]u8)rsp)
 			break
 		}
 		file, open_err := os.open(full_path)
 		if open_err != nil {
-			rsp := `51 not found`
+			rsp := `51 not found\r\n`
 			net.send_tcp(socket, transmute([]u8)rsp)
 			break
 		}
@@ -68,13 +68,13 @@ handleClient :: proc(socket: net.TCP_Socket) {
 		defer delete(buf)
 		fn, read_err := os.read_full(file, buf[:])
 		if read_err != nil {
-			rsp := `59 failed to read file`
+			rsp := `59 failed to read file\r\n`
 			net.send_tcp(socket, transmute([]u8)rsp)
 			break
 		}
 		mimetype := get_mimetype(full_path)
 		defer delete(mimetype)
-		rsp := strings.concatenate([]string{"20", mimetype, "\r\n", transmute(string)buf[:fn]})
+		rsp := strings.concatenate([]string{"20 ", mimetype, "\r\n", transmute(string)buf[:fn]})
 		defer delete(rsp)
 		net.send_tcp(socket, transmute([]u8)rsp)
 		net.close(socket)
@@ -83,6 +83,10 @@ handleClient :: proc(socket: net.TCP_Socket) {
 }
 
 get_mimetype :: proc(path: string) -> string {
+	l := len(path)
+	if (path[l - 4:l] == ".gem") {
+		return strings.clone("text/gemini")
+	}
 	command := []string{"file", "-I", path}
 	desc := os2.Process_Desc {
 		command = command,
